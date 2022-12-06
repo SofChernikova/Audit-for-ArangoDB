@@ -21,6 +21,7 @@ public class ArangoCollectionImpl2 extends ArangoCollectionImpl{
         DocumentCreateEntity<T> document = super.insertDocument(value);
         if(document != null){
             System.out.println("ok");
+
         }
         return document;
     }
