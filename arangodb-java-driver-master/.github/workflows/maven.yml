@@ -1,0 +1,188 @@
+name: Java CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - v7
+      - v6
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - master
+
+jobs:
+
+  test:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        docker-img:
+          - docker.io/arangodb/arangodb:3.8.7
+          - docker.io/arangodb/arangodb:3.9.3
+          - docker.io/arangodb/arangodb-preview:3.10-nightly
+          - docker.io/arangodb/enterprise:3.8.7
+          - docker.io/arangodb/enterprise:3.9.3
+          - docker.io/arangodb/enterprise-preview:3.10-nightly
+        topology:
+          - single
+          - cluster
+          - activefailover
+        db-ext-names:
+          - false
+        java-version:
+          - 8
+        user-language:
+          - en
+        include:
+          - docker-img: docker.io/arangodb/arangodb:3.9.3
+            topology: single
+            db-ext-names: true
+            java-version: 11
+            user-language: tr
+          - docker-img: docker.io/arangodb/enterprise:3.9.3
+            topology: cluster
+            db-ext-names: true
+            java-version: 17
+            user-language: tr
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{matrix.java-version}}
+          distribution: 'adopt'
+          cache: maven
+      - name: Start Database
+        run: ./docker/start_db.sh
+        env:
+          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
+          STARTER_MODE: ${{matrix.topology}}
+          DOCKER_IMAGE: ${{matrix.docker-img}}
+          DATABASE_EXTENDED_NAMES: ${{matrix.db-ext-names}}
+      - name: Info
+        run: mvn -version
+      - name: Test
+        run: mvn --no-transfer-progress test -DargLine="-Duser.language=${{matrix.user-language}}"
+
+  # test encodeURIComponent() and normalize('NFC') comparing to Javascript behavior
+  test-graalvm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: 'latest'
+          java-version: '11'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          components: 'js'
+      - name: Info
+        run: mvn -version
+      - name: Test
+        run: mvn -e --no-transfer-progress test -Dtest=com.arangodb.util.UnicodeUtilsTest
+
+  test-jwt:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        docker-img:
+          - docker.io/arangodb/enterprise:3.9.3
+        topology:
+          - single
+          - cluster
+          - activefailover
+        db-ext-names:
+          - false
+        java-version:
+          - 17
+        user-language:
+          - en
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{matrix.java-version}}
+          distribution: 'adopt'
+          cache: maven
+      - name: Start Database
+        run: ./docker/start_db.sh
+        env:
+          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
+          STARTER_MODE: ${{matrix.topology}}
+          DOCKER_IMAGE: ${{matrix.docker-img}}
+          DATABASE_EXTENDED_NAMES: ${{matrix.db-ext-names}}
+      - name: Set JWT
+        run: |
+          ENDPOINT=$(./docker/find_active_endpoint.sh)
+          echo "Active endpoint: $ENDPOINT"
+          JWT=$(curl "http://$ENDPOINT/_db/_system/_open/auth" -X POST -d '{"username":"root","password":"test"}' | jq ".jwt" | xargs)
+          echo "Setting JWT: $JWT"
+          sed -i "/arangodb.password/c\arangodb.jwt=$JWT" src/test/resources/arangodb.properties
+      - name: Info
+        run: mvn -version
+      - name: Test
+        run: mvn --no-transfer-progress test -DargLine="-Duser.language=${{matrix.user-language}}"
+
+  sonar:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        docker-img:
+          - docker.io/arangodb/enterprise:3.9.1
+        topology:
+          - cluster
+        db-ext-names:
+          - false
+        java-version:
+          - 11
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{matrix.java-version}}
+          distribution: 'adopt'
+          cache: maven
+      - name: Start Database
+        run: ./docker/start_db.sh
+        env:
+          ARANGO_LICENSE_KEY: ${{ secrets.ARANGO_LICENSE_KEY }}
+          STARTER_MODE: ${{matrix.topology}}
+          DOCKER_IMAGE: ${{matrix.docker-img}}
+          DATABASE_EXTENDED_NAMES: ${{matrix.db-ext-names}}
+      - name: Info
+        run: mvn -version
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B --no-transfer-progress -Dgpg.skip=true verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=arangodb_arangodb-java-driver
+
