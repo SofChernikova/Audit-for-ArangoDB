@@ -4,15 +4,22 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.DbName;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.mapping.ArangoJack;
-import org.apache.log4j.PropertyConfigurator;
+
+import kafka.SampleConsumer;
+import kafka.SampleProducer;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import java.util.Properties;
 
+
 public class Main {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
-        Properties prop = new Properties();
-        prop.setProperty("log4j.rootLogger", "WARN");
-        PropertyConfigurator.configure(prop);
 
         ArangoDB arangoDB = new ArangoDB.Builder().user("root").password("1117").serializer(new ArangoJack()).build();
 
@@ -20,11 +27,15 @@ public class Main {
         ArangoCollection first = db.collection("firstCollection");
 
         BaseDocument baseDocument = new BaseDocument();
-        baseDocument.addAttribute("id", 3);
-        baseDocument.addAttribute("name", "Pavel");
-        baseDocument.addAttribute("old", 25);
+        baseDocument.addAttribute("firstName", "Pavel");
+        baseDocument.addAttribute("lastName", "Grishin");
+        baseDocument.addAttribute("age", 25);
+        baseDocument.addAttribute("profession", "commentator");
 
         db.collection("firstCollection").insertDocument(baseDocument);
-        db.collection("firstCollection").deleteDocument("224934");
+
+        SampleConsumer sampleConsumer = new SampleConsumer();
+
+
     }
 }
