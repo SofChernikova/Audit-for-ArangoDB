@@ -5,4 +5,6 @@
 дополнительной базы данных
 
 # Мои обновления
-arangodb-java-driver-master/src/main/java/com/arangodb/internal/ArangoCollectionImpl2.java
+arangodb-java-driver-master/src/main/java/com/arangodb/internal/ArangoCollectionImpl2.java - изменена функция insertDocument(T value), теперь документ вставляется в базу данных и отправляется продюсером в kafka 
+
+arangodb-java-driver-master/src/main/java/kafka/ - здесь два класса SampleConsumer.java - читатель сообщений, SampleProducer.java - отправитель сообщений
