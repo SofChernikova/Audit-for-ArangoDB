@@ -8,6 +8,7 @@ import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.DocumentDeleteOptions;
 import com.arangodb.model.DocumentReplaceOptions;
+import kafka.SampleProducer;
 
 import java.util.Collection;
 
@@ -20,8 +21,8 @@ public class ArangoCollectionImpl2 extends ArangoCollectionImpl{
     public <T> DocumentCreateEntity<T> insertDocument(T value) throws ArangoDBException {
         DocumentCreateEntity<T> document = super.insertDocument(value);
         if(document != null){
+            SampleProducer sampleProducer = new SampleProducer(value);
             System.out.println("ok");
-
         }
         return document;
     }
