@@ -23,7 +23,16 @@ package com.arangodb.entity;
 /**
  * @author Mark Vollmary
  */
-public class VertexEntity extends DocumentEntity {
+public class VertexEntity<T> extends DocumentEntity {
+    private T value;
+
+    public T getValue() {
+        return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
+    }
 
     public VertexEntity() {
         super();
