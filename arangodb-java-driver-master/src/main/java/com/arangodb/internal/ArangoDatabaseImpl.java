@@ -24,6 +24,7 @@ import com.arangodb.*;
 import com.arangodb.entity.*;
 import com.arangodb.entity.arangosearch.AnalyzerEntity;
 import com.arangodb.entity.arangosearch.analyzer.SearchAnalyzer;
+import com.arangodb.internal.audit.ArangoCollectionImpl2;
 import com.arangodb.internal.audit.Audit;
 import com.arangodb.internal.cursor.ArangoCursorImpl;
 import com.arangodb.internal.net.HostHandle;
@@ -87,7 +88,7 @@ public class ArangoDatabaseImpl extends InternalArangoDatabase<ArangoDBImpl, Ara
     }
     @Override
     public ArangoCollection collection(final String name, Audit audit) {
-        return new ArangoCollectionImpl(this, name);
+        return new ArangoCollectionImpl2(this, name, audit);
     }
 
     @Override
