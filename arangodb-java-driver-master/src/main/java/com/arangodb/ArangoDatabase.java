@@ -23,6 +23,7 @@ package com.arangodb;
 import com.arangodb.entity.*;
 import com.arangodb.entity.arangosearch.AnalyzerEntity;
 import com.arangodb.entity.arangosearch.analyzer.SearchAnalyzer;
+import com.arangodb.internal.audit.Audit;
 import com.arangodb.model.*;
 import com.arangodb.model.arangosearch.AnalyzerDeleteOptions;
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions;
@@ -114,6 +115,8 @@ public interface ArangoDatabase extends ArangoSerializationAccessor {
      * @return collection handler
      */
     ArangoCollection collection(String name);
+
+    ArangoCollection collection(String name, Audit audit);
 
     /**
      * Creates a collection for the given collection's name, then returns collection information from the server.

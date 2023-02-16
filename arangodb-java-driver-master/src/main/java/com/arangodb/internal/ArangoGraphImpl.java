@@ -26,6 +26,9 @@ import com.arangodb.ArangoGraph;
 import com.arangodb.ArangoVertexCollection;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
+import com.arangodb.internal.audit.ArangoEdgeCollectionImpl2;
+import com.arangodb.internal.audit.ArangoVertexCollectionImpl2;
+import com.arangodb.internal.audit.Audit;
 import com.arangodb.model.GraphCreateOptions;
 import com.arangodb.model.VertexCollectionCreateOptions;
 
@@ -99,12 +102,18 @@ public class ArangoGraphImpl extends InternalArangoGraph<ArangoDBImpl, ArangoDat
     public ArangoVertexCollection vertexCollection(final String name) {
         return new ArangoVertexCollectionImpl(this, name);
     }
+    public ArangoVertexCollection vertexCollection(final String name, Audit audit) {
+        return new ArangoVertexCollectionImpl2(this, name, audit);
+    }
 
     @Override
     public ArangoEdgeCollection edgeCollection(final String name) {
         return new ArangoEdgeCollectionImpl(this, name);
     }
-
+    @Override
+    public ArangoEdgeCollection edgeCollection(final String name, Audit audit) {
+        return new ArangoEdgeCollectionImpl2(this, name, audit);
+    }
     @Override
     public Collection<String> getEdgeDefinitions() throws ArangoDBException {
         return executor.execute(getEdgeDefinitionsRequest(), getEdgeDefinitionsDeserializer());

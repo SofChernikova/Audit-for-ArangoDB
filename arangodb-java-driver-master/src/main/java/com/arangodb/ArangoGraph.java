@@ -22,6 +22,7 @@ package com.arangodb;
 
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
+import com.arangodb.internal.audit.Audit;
 import com.arangodb.model.GraphCreateOptions;
 import com.arangodb.model.VertexCollectionCreateOptions;
 
@@ -138,7 +139,7 @@ public interface ArangoGraph extends ArangoSerializationAccessor {
      * Adds a vertex collection to the set of collections of the graph. If the collection does not exist, it will be
      * created.
      *
-     * @param name Name of the vertex collection
+     * @param name    Name of the vertex collection
      * @param options additional options
      * @return information about the graph
      * @throws ArangoDBException
@@ -156,6 +157,8 @@ public interface ArangoGraph extends ArangoSerializationAccessor {
      */
     ArangoVertexCollection vertexCollection(String name);
 
+    ArangoVertexCollection vertexCollection(String name, Audit audit);
+
     /**
      * Returns a {@code ArangoEdgeCollection} instance for the given edge collection name.
      *
@@ -163,6 +166,8 @@ public interface ArangoGraph extends ArangoSerializationAccessor {
      * @return collection handler
      */
     ArangoEdgeCollection edgeCollection(String name);
+
+    ArangoEdgeCollection edgeCollection(String name, Audit audit);
 
     /**
      * Fetches all edge collections from the graph and returns a list of collection names.
