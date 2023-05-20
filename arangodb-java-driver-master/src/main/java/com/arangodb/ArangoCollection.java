@@ -25,6 +25,7 @@ import com.arangodb.model.*;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Interface for operations on ArangoDB collection level.
@@ -218,7 +219,7 @@ public interface ArangoCollection extends ArangoSerializationAccessor {
      * @see <a href="https://www.arangodb.com/docs/stable/http/document-working-with-documents.html#replace-document">API
      * Documentation</a>
      */
-    <T> DocumentUpdateEntity<T> replaceDocument(String key, T value) throws ArangoDBException;
+    <T> DocumentUpdateEntity<T> replaceDocument(String key, T value) throws ArangoDBException, ExecutionException, InterruptedException;
 
     /**
      * Replaces the document with {@code key} with the one in the body, provided there is such a document and no
@@ -279,7 +280,7 @@ public interface ArangoCollection extends ArangoSerializationAccessor {
      * @see <a href="https://www.arangodb.com/docs/stable/http/document-working-with-documents.html#update-document">API
      * Documentation</a>
      */
-    <T> DocumentUpdateEntity<T> updateDocument(String key, T value) throws ArangoDBException;
+    <T> DocumentUpdateEntity<T> updateDocument(String key, T value) throws ArangoDBException, ExecutionException, InterruptedException;
 
     /**
      * Partially updates the document identified by document-key. The value must contain a document with the attributes
